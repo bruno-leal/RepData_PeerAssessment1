@@ -1,22 +1,19 @@
----
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
----
+# Reproducible Research: Peer Assessment 1
 
 
 ## Loading and preprocessing the data
 
 We start with unzipping the zip file into a new "activity.csv" file.
 
-```{r}
+
+```r
 unzip("activity.zip")
 ```
 
 Next we load the csv file into a "data" object.
 
-```{r}
+
+```r
 data <- read.csv("activity.csv")
 ```
 
@@ -27,7 +24,8 @@ Now we have stored all the information in a "data" object, with a suitable forma
 
 Next we store the sum of steps for each day in a new object "aggdata".
 
-```{r}
+
+```r
 aggdata <- aggregate(x = data$steps, by = list(data$date), FUN = "sum", na.rm = TRUE)
 
 names(aggdata) <- c("date", "steps_sum")
@@ -35,7 +33,8 @@ names(aggdata) <- c("date", "steps_sum")
 
 We can now produce a histogram of the total number of steps taken each day. Since the number of steps is a continuous variable, we group it's value by 50 breaks.
 
-```{r}
+
+```r
 with (
     aggdata, 
     hist (
@@ -49,11 +48,25 @@ with (
 )
 ```
 
+![](PA1_template_files/figure-html/unnamed-chunk-4-1.png) 
+
 Now we calculate the mean and median of the total number of steps taken per day.
 
-```{r}
+
+```r
 mean(aggdata$steps, na.rm = TRUE)
+```
+
+```
+## [1] 9354.23
+```
+
+```r
 median(aggdata$steps, na.rm = TRUE)
+```
+
+```
+## [1] 10395
 ```
 
 
@@ -61,7 +74,8 @@ median(aggdata$steps, na.rm = TRUE)
 
 We begin by storing the average number of steps for each 5-minute interval in the object "aggdata".
 
-```{r}
+
+```r
 aggdata <- aggregate(x = data$steps, by = list(data$interval), FUN = "mean", na.rm = TRUE)
 
 names(aggdata) <- c("interval", "steps_mean")
@@ -69,15 +83,17 @@ names(aggdata) <- c("interval", "steps_mean")
 
 We can calculate the 5-minute interval that, on average across all the days in the dataset, contains the maximum number of steps.
 
-```{r}
+
+```r
 maxsteps <- aggdata[which.max(aggdata$steps), ]
 ```
 
-That interval is **`r maxsteps$interval`**, at which the average of steps is **`r maxsteps$steps`**.
+That interval is **835**, at which the average of steps is **206.1698113**.
 
 Now we can produce a graph with the average number of steps taken by each 5-minute interval, across all days.
 
-```{r}
+
+```r
 with (
     aggdata,
     plot (
@@ -93,9 +109,11 @@ with (
 points(maxsteps$interval,  maxsteps$steps_mean, col = 'red', lwd = 3, pch = 19)
 ```
 
+![](PA1_template_files/figure-html/unnamed-chunk-8-1.png) 
+
 
 ## Imputing missing values
-There are a total of **`r sum(is.na(data$steps))`** missing values in the dataset.
+There are a total of **2304** missing values in the dataset.
 
 We will now replace those missing values by the average number of steps for that interval (calculated with the non-missing values).
 
@@ -103,7 +121,8 @@ We start by creating a new auxiliary object that consists on the merge of "data"
 
 Then we replace all the missing values by the mean value of steps for the corresponding interval. Finally we clean the data table.
 
-```{r}
+
+```r
 newdata <- merge(x = data, y = aggdata, by = "interval", all.x = TRUE)
 
 newdata[is.na(newdata$steps), c("steps")] <- newdata[is.na(newdata$steps), c("steps_mean")]
@@ -113,7 +132,8 @@ newdata$steps_mean <- NULL
 
 We can now produce a histogram of the total number of steps taken each day, with the replaced missing values. We're going to produce the graph in the same exact way as we did before (but now with the replaced missing values).
 
-```{r}
+
+```r
 aggdata <- aggregate(x = newdata$steps, by = list(newdata$date), FUN = "sum")
 
 names(aggdata) <- c("date", "steps_sum")
@@ -131,11 +151,25 @@ with (
 )
 ```
 
+![](PA1_template_files/figure-html/unnamed-chunk-10-1.png) 
+
 We can also recalculate the mean and median of the total number of steps taken per day.
 
-```{r}
+
+```r
 mean(aggdata$steps)
+```
+
+```
+## [1] 10766.19
+```
+
+```r
 median(aggdata$steps)
+```
+
+```
+## [1] 10766.19
 ```
 
 The approach that we used to replace the missing values has some effects on this values, that differ significantly from those estimated at the first part of the assignment.
@@ -149,17 +183,17 @@ It should also be noted that there is a significant reduction of the frequency o
 
 For this purpose, we start by turning "date" column into a date class.
 
-```{r}
+
+```r
 newdata$date <- strptime(newdata$date, "%Y-%m-%d")
 ```
 
 The weekdays() function returns the week day of a given date. It can be used to determine which of the dates from our data correspond to weekdays and to weekends.
 
-```{r, echo = FALSE, results = "hide"}
-Sys.setlocale("LC_TIME", "English")
-```
 
-```{r}
+
+
+```r
 newdata$daytype <- as.factor(ifelse(weekdays(newdata$date) %in% c("Saturday","Sunday"), "Weekend", "Weekday"))
 ```
 
@@ -168,7 +202,8 @@ across all weekday days or weekend days.
 
 For this, we're going to use the Lattice Ploting System.
 
-```{r}
+
+```r
 aggdata <- aggregate (newdata$steps, by = list (newdata$interval, newdata$daytype), FUN = "mean", na.rm = TRUE)
 
 names(aggdata) <- c("interval", "daytype", "steps_mean")
@@ -183,3 +218,5 @@ xyplot (
     layout = c (1, 2)
 )
 ```
+
+![](PA1_template_files/figure-html/unnamed-chunk-15-1.png) 
